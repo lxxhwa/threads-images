@@ -1,0 +1,163 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>상품 검색 · onharu.room</title>
+<meta name="description" content="onharu.room에 소개한 제품을 번호로 찾는 페이지">
+<style>
+  :root {
+    --bg: #f7efe3; --card: #fffaf3; --ink: #3b2a20; --muted: #8a7566;
+    --accent: #a0623f; --accent-ink: #fff; --line: #ead9c6; --notice: #f1e2cc;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #1f1915; --card: #2a221c; --ink: #f3e8dc; --muted: #b9a594;
+      --accent: #d08a5e; --accent-ink: #1f1915; --line: #3b3029; --notice: #33291f;
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--bg); color: var(--ink);
+    font-family: -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Pretendard", "Noto Sans KR", sans-serif;
+    line-height: 1.5; -webkit-text-size-adjust: 100%;
+  }
+  .wrap { max-width: 560px; margin: 0 auto; padding: 0 16px 48px; }
+  .notice {
+    background: var(--notice); color: var(--muted); font-size: 12px; text-align: center;
+    padding: 8px 16px; margin: 0;
+  }
+  header { padding: 20px 0 8px; }
+  header h1 { font-size: 20px; margin: 0; }
+  header p { margin: 4px 0 0; color: var(--muted); font-size: 14px; }
+  .search {
+    position: sticky; top: 0; z-index: 2; background: var(--bg); padding: 12px 0;
+  }
+  .search form { display: flex; gap: 8px; }
+  .search input {
+    flex: 1; min-width: 0; font-size: 18px; padding: 12px 14px; border-radius: 12px;
+    border: 2px solid var(--line); background: var(--card); color: var(--ink);
+  }
+  .search input:focus { outline: none; border-color: var(--accent); }
+  .search button {
+    font-size: 16px; padding: 0 18px; border: 0; border-radius: 12px;
+    background: var(--accent); color: var(--accent-ink); font-weight: 700;
+  }
+  .status { font-size: 14px; color: var(--muted); margin: 4px 2px 0; min-height: 21px; }
+  .list { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 8px; }
+  .card {
+    background: var(--card); border: 1px solid var(--line); border-radius: 14px; overflow: hidden;
+    display: flex; flex-direction: column;
+  }
+  .card img { width: 100%; aspect-ratio: 4 / 5; object-fit: cover; display: block; background: var(--line); }
+  .body { padding: 10px 10px 12px; display: flex; flex-direction: column; gap: 6px; flex: 1; }
+  .no {
+    align-self: flex-start; font-size: 12px; font-weight: 700; color: var(--accent);
+    border: 1px solid var(--accent); border-radius: 999px; padding: 1px 8px;
+  }
+  .name { font-size: 15px; font-weight: 700; margin: 0; word-break: keep-all; }
+  .date { font-size: 12px; color: var(--muted); }
+  .links { margin-top: auto; display: flex; flex-direction: column; gap: 6px; }
+  .buy {
+    display: block; text-align: center; text-decoration: none; font-size: 14px; font-weight: 700;
+    background: var(--accent); color: var(--accent-ink); border-radius: 10px; padding: 9px 6px;
+  }
+  .recipe { text-align: center; font-size: 13px; color: var(--muted); }
+  .single { grid-template-columns: 1fr; }
+  .empty { text-align: center; color: var(--muted); padding: 40px 0; grid-column: 1 / -1; }
+  footer { margin-top: 32px; font-size: 12px; color: var(--muted); text-align: center; }
+</style>
+</head>
+<body>
+<p class="notice">이 페이지의 링크는 쿠팡 파트너스 활동의 일환으로, 구매 시 수수료를 받을 수 있습니다.</p>
+<div class="wrap">
+  <header>
+    <h1>상품 검색</h1>
+    <p>글이나 댓글에 적힌 번호를 입력해 줘</p>
+  </header>
+  <div class="search">
+    <form id="form" autocomplete="off">
+      <input id="q" type="search" inputmode="numeric" placeholder="번호 (예: 85)" aria-label="번호">
+      <button type="submit">검색</button>
+    </form>
+    <p class="status" id="status"></p>
+  </div>
+  <main class="list" id="list"></main>
+  <footer>onharu.room · 가격과 재고는 쿠팡에서 확인해 줘</footer>
+</div>
+<script>
+  const list = document.getElementById("list");
+  const status = document.getElementById("status");
+  const q = document.getElementById("q");
+  let items = [];
+
+  const norm = (s) => String(s).replace(/\D/g, "").replace(/^0+/, "");
+
+  function el(tag, cls, text) {
+    const e = document.createElement(tag);
+    if (cls) e.className = cls;
+    if (text != null) e.textContent = text;
+    return e;
+  }
+
+  function card(item) {
+    const c = el("article", "card");
+    if (item.image) {
+      const img = el("img");
+      img.src = item.image; img.alt = item.name; img.loading = "lazy";
+      c.append(img);
+    }
+    const b = el("div", "body");
+    b.append(el("span", "no", "번호 " + item.no), el("p", "name", item.name));
+    if (item.date) b.append(el("span", "date", item.date));
+    const links = el("div", "links");
+    for (const l of item.links) {
+      const a = el("a", "buy", item.links.length > 1 ? l.label + " 보기" : "쿠팡에서 보기");
+      a.href = l.url; a.target = "_blank"; a.rel = "sponsored noopener";
+      links.append(a);
+    }
+    if (item.post) {
+      const r = el("a", "recipe", "레시피 글 보기");
+      r.href = item.post; r.target = "_blank"; r.rel = "noopener";
+      links.append(r);
+    }
+    b.append(links);
+    c.append(b);
+    return c;
+  }
+
+  function render() {
+    const key = norm(q.value);
+    const shown = key ? items.filter((i) => norm(i.no) === key) : items;
+    list.replaceChildren(...shown.map(card));
+    list.classList.toggle("single", Boolean(key) && shown.length === 1);
+    if (key && !shown.length) {
+      list.append(el("p", "empty", q.value.trim() + "번은 아직 없어. 번호를 다시 확인해 줘"));
+    } else if (!items.length) {
+      list.append(el("p", "empty", "아직 등록된 상품이 없어"));
+    }
+    status.textContent = key ? (shown.length ? "번호 " + shown[0].no + " 검색 결과" : "")
+                             : "전체 " + items.length + "개 · 최신순";
+  }
+
+  document.getElementById("form").addEventListener("submit", (e) => {
+    e.preventDefault();
+    q.blur();
+    const url = new URL(location.href);
+    norm(q.value) ? url.searchParams.set("q", q.value.trim()) : url.searchParams.delete("q");
+    history.replaceState(null, "", url);
+    render();
+  });
+  q.addEventListener("input", () => { if (!q.value.trim()) render(); });
+
+  q.value = new URLSearchParams(location.search).get("q") || "";
+  fetch("products.json", { cache: "no-store" })
+    .then((r) => r.json())
+    .then((data) => {
+      items = data.sort((a, b) => Number(norm(b.no)) - Number(norm(a.no)));
+      render();
+    })
+    .catch(() => { status.textContent = "목록을 불러오지 못했어. 잠시 뒤 새로고침해 줘"; });
+</script>
+</body>
+</html>
