@@ -2,88 +2,134 @@
 <html lang="ko">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="light">
+<meta name="theme-color" content="#ffe3ee">
 <title>상품 검색 · onharu.room</title>
 <meta name="description" content="onharu.room에 소개한 제품을 번호로 찾는 페이지">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
 <style>
   :root {
-    --bg: #f7efe3; --card: #fffaf3; --ink: #3b2a20; --muted: #8a7566;
-    --accent: #a0623f; --accent-ink: #fff; --line: #ead9c6; --notice: #f1e2cc;
-  }
-  @media (prefers-color-scheme: dark) {
-    :root {
-      --bg: #1f1915; --card: #2a221c; --ink: #f3e8dc; --muted: #b9a594;
-      --accent: #d08a5e; --accent-ink: #1f1915; --line: #3b3029; --notice: #33291f;
-    }
+    --pink: #e84d8a;          /* 포인트(버튼) */
+    --pink-deep: #c93573;
+    --pink-soft: #ffe3ee;
+    --lav: #efe6ff;           /* 번호 뱃지 */
+    --lav-ink: #7a5bd0;
+    --lav-line: #dccbff;
+    --ink: #3d2b3a;
+    --muted: #9a8396;
+    --card: #ffffff;
+    --shadow: 0 6px 18px rgba(201, 120, 170, .16);
   }
   * { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; }
   body {
-    margin: 0; background: var(--bg); color: var(--ink);
-    font-family: -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Pretendard", "Noto Sans KR", sans-serif;
-    line-height: 1.5; -webkit-text-size-adjust: 100%;
+    margin: 0; min-height: 100vh; color: var(--ink);
+    font-family: "Pretendard Variable", Pretendard, -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo",
+                 "Noto Sans KR", sans-serif;
+    background: linear-gradient(165deg, #ffe3ee 0%, #fbe8f6 35%, #efe6ff 75%, #e8e0ff 100%) fixed;
+    line-height: 1.45; letter-spacing: -0.01em;
   }
-  .wrap { max-width: 560px; margin: 0 auto; padding: 0 16px 48px; }
   .notice {
-    background: var(--notice); color: var(--muted); font-size: 12px; text-align: center;
-    padding: 8px 16px; margin: 0;
+    margin: 0; padding: 7px 16px; text-align: center; font-size: 11px; color: var(--muted);
+    background: rgba(255, 255, 255, .55); word-break: keep-all;
   }
-  header { padding: 20px 0 8px; }
-  header h1 { font-size: 20px; margin: 0; }
-  header p { margin: 4px 0 0; color: var(--muted); font-size: 14px; }
-  .search {
-    position: sticky; top: 0; z-index: 2; background: var(--bg); padding: 12px 0;
+  .wrap { max-width: 560px; margin: 0 auto; padding: 0 16px 56px; }
+
+  header { text-align: center; padding: 26px 0 6px; }
+  .logo {
+    width: 64px; height: 64px; margin: 0 auto 10px; border-radius: 50%;
+    display: grid; place-items: center; background: #fff; box-shadow: var(--shadow);
   }
-  .search form { display: flex; gap: 8px; }
+  .logo svg { width: 30px; height: 30px; }
+  header h1 { margin: 0; font-size: 22px; font-weight: 800; letter-spacing: -0.02em; }
+  header p { margin: 6px 0 0; font-size: 14px; color: var(--muted); }
+
+  .search { position: sticky; top: 0; z-index: 5; padding: 14px 0 10px; }
+  .search::before {         /* 스크롤 때 뒤 카드가 비치지 않게 */
+    content: ""; position: absolute; inset: 0 -16px; z-index: -1;
+    background: linear-gradient(#fde6f2 70%, rgba(253, 230, 242, 0));
+  }
+  .search form {
+    display: flex; align-items: center; gap: 6px; background: #fff; border-radius: 999px;
+    padding: 6px 6px 6px 18px; box-shadow: var(--shadow); border: 2px solid transparent;
+    transition: border-color .15s;
+  }
+  .search form:focus-within { border-color: #f6a9c8; }
+  .search svg { flex: none; width: 20px; height: 20px; color: var(--pink); }
   .search input {
-    flex: 1; min-width: 0; font-size: 18px; padding: 12px 14px; border-radius: 12px;
-    border: 2px solid var(--line); background: var(--card); color: var(--ink);
+    flex: 1; min-width: 0; border: 0; outline: none; background: none; color: var(--ink);
+    font: inherit; font-size: 17px; font-weight: 600; padding: 10px 4px;
   }
-  .search input:focus { outline: none; border-color: var(--accent); }
+  .search input::placeholder { color: #c4b3c0; font-weight: 500; }
+  .search input::-webkit-search-cancel-button { display: none; }
   .search button {
-    font-size: 16px; padding: 0 18px; border: 0; border-radius: 12px;
-    background: var(--accent); color: var(--accent-ink); font-weight: 700;
+    flex: none; border: 0; border-radius: 999px; padding: 12px 18px; cursor: pointer;
+    font: inherit; font-size: 15px; font-weight: 700; color: #fff; background: var(--pink);
   }
-  .status { font-size: 14px; color: var(--muted); margin: 4px 2px 0; min-height: 21px; }
-  .list { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 8px; }
+  .search button:active { background: var(--pink-deep); }
+  .status { margin: 10px 4px 0; font-size: 13px; color: var(--muted); min-height: 19px; }
+
+  .list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin-top: 4px; }
+  .list.single { grid-template-columns: minmax(0, 1fr); max-width: 300px; margin-left: auto; margin-right: auto; }
   .card {
-    background: var(--card); border: 1px solid var(--line); border-radius: 14px; overflow: hidden;
-    display: flex; flex-direction: column;
+    position: relative; display: flex; flex-direction: column; overflow: hidden;
+    background: var(--card); border-radius: 20px; box-shadow: var(--shadow);
   }
-  .card img { width: 100%; aspect-ratio: 4 / 5; object-fit: cover; display: block; background: var(--line); }
-  .body { padding: 10px 10px 12px; display: flex; flex-direction: column; gap: 6px; flex: 1; }
+  .thumb { position: relative; aspect-ratio: 4 / 5; background: var(--pink-soft); }
+  .thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
   .no {
-    align-self: flex-start; font-size: 12px; font-weight: 700; color: var(--accent);
-    border: 1px solid var(--accent); border-radius: 999px; padding: 1px 8px;
+    position: absolute; top: 8px; left: 8px; padding: 3px 9px; border-radius: 999px;
+    font-size: 12px; font-weight: 800; color: var(--lav-ink); background: var(--lav);
+    border: 1px solid var(--lav-line);
   }
-  .name { font-size: 15px; font-weight: 700; margin: 0; word-break: keep-all; }
-  .date { font-size: 12px; color: var(--muted); }
+  .body { display: flex; flex-direction: column; gap: 8px; flex: 1; padding: 10px 10px 12px; }
+  .name {
+    margin: 0; font-size: 14px; font-weight: 700; word-break: keep-all; overflow-wrap: anywhere;
+    display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+  }
+  .date { font-size: 11px; color: var(--muted); margin-top: -4px; }
   .links { margin-top: auto; display: flex; flex-direction: column; gap: 6px; }
   .buy {
-    display: block; text-align: center; text-decoration: none; font-size: 14px; font-weight: 700;
-    background: var(--accent); color: var(--accent-ink); border-radius: 10px; padding: 9px 6px;
+    display: block; text-align: center; text-decoration: none; border-radius: 999px; padding: 10px 6px;
+    font-size: 13px; font-weight: 700; color: #fff; background: var(--pink);
   }
-  .recipe { text-align: center; font-size: 13px; color: var(--muted); }
-  .single { grid-template-columns: 1fr; }
-  .empty { text-align: center; color: var(--muted); padding: 40px 0; grid-column: 1 / -1; }
-  footer { margin-top: 32px; font-size: 12px; color: var(--muted); text-align: center; }
+  .buy:active { background: var(--pink-deep); }
+  .recipe { text-align: center; font-size: 12px; color: var(--muted); text-decoration: none; }
+
+  .empty {
+    grid-column: 1 / -1; text-align: center; padding: 36px 20px; margin-top: 8px;
+    background: rgba(255, 255, 255, .7); border-radius: 20px; color: var(--muted); font-size: 14px;
+  }
+  .empty strong { display: block; color: var(--ink); font-size: 16px; margin-bottom: 4px; }
+  footer { margin-top: 36px; text-align: center; font-size: 12px; color: var(--muted); }
+  @media (min-width: 520px) { .list { gap: 14px; } .name { font-size: 15px; } }
 </style>
 </head>
 <body>
 <p class="notice">이 페이지의 링크는 쿠팡 파트너스 활동의 일환으로, 구매 시 수수료를 받을 수 있습니다.</p>
 <div class="wrap">
   <header>
-    <h1>상품 검색</h1>
-    <p>글이나 댓글에 적힌 번호를 입력해 줘</p>
+    <div class="logo" aria-hidden="true">
+      <svg viewBox="0 0 24 24" fill="#e84d8a"><path d="M12 21s-7.5-4.6-9.6-9.2C.9 8.4 3 4.5 6.7 4.5c2.1 0 3.6 1.2 4.3 2.4h2c.7-1.2 2.2-2.4 4.3-2.4 3.7 0 5.8 3.9 4.3 7.3C19.5 16.4 12 21 12 21z"/></svg>
+    </div>
+    <h1>onharu.room</h1>
+    <p>5평 원룸 라이프에서 소개한 제품, 번호로 찾아봐</p>
   </header>
+
   <div class="search">
-    <form id="form" autocomplete="off">
-      <input id="q" type="search" inputmode="numeric" placeholder="번호 (예: 85)" aria-label="번호">
+    <form id="form" autocomplete="off" role="search">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true">
+        <circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/>
+      </svg>
+      <input id="q" type="search" inputmode="numeric" enterkeyhint="search" placeholder="상품 번호 입력 (예: 85)" aria-label="상품 번호">
       <button type="submit">검색</button>
     </form>
     <p class="status" id="status"></p>
   </div>
+
   <main class="list" id="list"></main>
-  <footer>onharu.room · 가격과 재고는 쿠팡에서 확인해 줘</footer>
+  <footer>가격과 재고는 쿠팡에서 확인해 줘 · onharu.room</footer>
 </div>
 <script>
   const list = document.getElementById("list");
@@ -102,22 +148,27 @@
 
   function card(item) {
     const c = el("article", "card");
+    const thumb = el("div", "thumb");
     if (item.image) {
       const img = el("img");
-      img.src = item.image; img.alt = item.name; img.loading = "lazy";
-      c.append(img);
+      img.src = item.image; img.alt = item.name; img.loading = "lazy"; img.decoding = "async";
+      img.onerror = () => img.remove();
+      thumb.append(img);
     }
+    thumb.append(el("span", "no", "No." + item.no));
+    c.append(thumb);
+
     const b = el("div", "body");
-    b.append(el("span", "no", "번호 " + item.no), el("p", "name", item.name));
+    b.append(el("p", "name", item.name));
     if (item.date) b.append(el("span", "date", item.date));
     const links = el("div", "links");
     for (const l of item.links) {
-      const a = el("a", "buy", item.links.length > 1 ? l.label + " 보기" : "쿠팡에서 보기");
+      const a = el("a", "buy", item.links.length > 1 ? l.label + " 쿠팡에서 보기" : "쿠팡에서 보기");
       a.href = l.url; a.target = "_blank"; a.rel = "sponsored noopener";
       links.append(a);
     }
     if (item.post) {
-      const r = el("a", "recipe", "레시피 글 보기");
+      const r = el("a", "recipe", "레시피 글 보기 ›");
       r.href = item.post; r.target = "_blank"; r.rel = "noopener";
       links.append(r);
     }
@@ -127,28 +178,41 @@
   }
 
   function render() {
-    const key = norm(q.value);
+    const raw = q.value.trim();
+    const key = norm(raw);
     const shown = key ? items.filter((i) => norm(i.no) === key) : items;
     list.replaceChildren(...shown.map(card));
     list.classList.toggle("single", Boolean(key) && shown.length === 1);
     if (key && !shown.length) {
-      list.append(el("p", "empty", q.value.trim() + "번은 아직 없어. 번호를 다시 확인해 줘"));
+      const box = el("div", "empty");
+      box.append(el("strong", null, key + "번 상품은 아직 없어"), document.createTextNode("번호를 한 번 더 확인해 줘"));
+      list.append(box);
+    } else if (raw && !key) {
+      list.replaceChildren();
+      const box = el("div", "empty");
+      box.append(el("strong", null, "숫자로 입력해 줘"), document.createTextNode("글이나 댓글에 적힌 번호를 넣으면 돼"));
+      list.append(box);
     } else if (!items.length) {
       list.append(el("p", "empty", "아직 등록된 상품이 없어"));
     }
-    status.textContent = key ? (shown.length ? "번호 " + shown[0].no + " 검색 결과" : "")
-                             : "전체 " + items.length + "개 · 최신순";
+    status.textContent = key ? (shown.length ? "No." + shown[0].no + " 검색 결과" : "")
+                             : (raw ? "" : "전체 " + items.length + "개 · 최신순");
+  }
+
+  function syncUrl() {
+    const url = new URL(location.href);
+    norm(q.value) ? url.searchParams.set("q", norm(q.value)) : url.searchParams.delete("q");
+    history.replaceState(null, "", url);
   }
 
   document.getElementById("form").addEventListener("submit", (e) => {
     e.preventDefault();
     q.blur();
-    const url = new URL(location.href);
-    norm(q.value) ? url.searchParams.set("q", q.value.trim()) : url.searchParams.delete("q");
-    history.replaceState(null, "", url);
+    syncUrl();
     render();
+    window.scrollTo({ top: 0, behavior: "smooth" });
   });
-  q.addEventListener("input", () => { if (!q.value.trim()) render(); });
+  q.addEventListener("input", () => { render(); syncUrl(); });
 
   q.value = new URLSearchParams(location.search).get("q") || "";
   fetch("products.json", { cache: "no-store" })
