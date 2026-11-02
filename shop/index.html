@@ -102,6 +102,28 @@
     background: rgba(255, 255, 255, .7); border-radius: 20px; color: var(--muted); font-size: 14px;
   }
   .empty strong { display: block; color: var(--ink); font-size: 16px; margin-bottom: 4px; }
+  /* 방금 올린 상품(2026-11-02): 검색 없이 바로 누르게 맨 위에 크게 */
+  .recent { margin: 6px 0 18px; }
+  .recent[hidden] { display: none; }
+  .recent h2 { margin: 0 4px 10px; font-size: 17px; font-weight: 800; }
+  .recent h2 span { font-size: 12px; font-weight: 600; color: var(--muted); margin-left: 6px; }
+  .row {
+    display: grid; grid-auto-flow: column; grid-auto-columns: 64%; gap: 12px;
+    overflow-x: auto; scroll-snap-type: x mandatory; padding: 2px 2px 10px; -webkit-overflow-scrolling: touch;
+  }
+  .row::-webkit-scrollbar { display: none; }
+  .big {
+    scroll-snap-align: start; display: block; text-decoration: none; color: inherit;
+    background: var(--card); border-radius: 22px; overflow: hidden; box-shadow: var(--shadow);
+  }
+  .big .thumb { aspect-ratio: 1 / 1; }
+  .big .no { font-size: 15px; padding: 4px 11px; top: 10px; left: 10px; }
+  .big .name { padding: 10px 12px 0; font-size: 15px; }
+  .big .go {
+    display: block; margin: 10px 12px 12px; text-align: center; border-radius: 999px; padding: 11px 6px;
+    font-size: 14px; font-weight: 800; color: #fff; background: var(--pink);
+  }
+  @media (min-width: 520px) { .row { grid-auto-columns: 42%; } }
   footer { margin-top: 36px; text-align: center; font-size: 12px; color: var(--muted); }
   @media (min-width: 520px) { .list { gap: 14px; } .name { font-size: 15px; } }
 </style>
@@ -127,6 +149,11 @@
     </form>
     <p class="status" id="status"></p>
   </div>
+
+  <section class="recent" id="recent" hidden>
+    <h2>방금 올린 상품<span>누르면 바로 쿠팡으로 가</span></h2>
+    <div class="row" id="row"></div>
+  </section>
 
   <main class="list" id="list"></main>
   <footer>가격과 재고는 쿠팡에서 확인해 줘 · onharu.room</footer>
@@ -177,9 +204,29 @@
     return c;
   }
 
+  const RECENT = 8;   // 방금 올린 상품 칸에 보일 개수(2026-11-02)
+  const recent = document.getElementById("recent");
+  const row = document.getElementById("row");
+
+  function bigCard(item) {
+    const a = el("a", "big");
+    a.href = item.links[0].url; a.target = "_blank"; a.rel = "sponsored noopener";
+    const thumb = el("div", "thumb");
+    if (item.image) {
+      const img = el("img");
+      img.src = item.image; img.alt = item.name; img.decoding = "async";
+      img.onerror = () => img.remove();
+      thumb.append(img);
+    }
+    thumb.append(el("span", "no", "No." + item.no));
+    a.append(thumb, el("p", "name", item.name), el("span", "go", "쿠팡에서 보기"));
+    return a;
+  }
+
   function render() {
     const raw = q.value.trim();
     const key = norm(raw);
+    recent.hidden = Boolean(raw) || !items.length;   // 번호로 찾을 때는 숨김
     const shown = key ? items.filter((i) => norm(i.no) === key) : items;
     list.replaceChildren(...shown.map(card));
     list.classList.toggle("single", Boolean(key) && shown.length === 1);
@@ -219,6 +266,7 @@
     .then((r) => r.json())
     .then((data) => {
       items = data.sort((a, b) => Number(norm(b.no)) - Number(norm(a.no)));
+      row.replaceChildren(...items.filter((i) => i.links.length).slice(0, RECENT).map(bigCard));
       render();
     })
     .catch(() => { status.textContent = "목록을 불러오지 못했어. 잠시 뒤 새로고침해 줘"; });
