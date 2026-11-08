@@ -159,6 +159,13 @@
   <footer>가격과 재고는 쿠팡에서 확인해 줘 · onharu.room</footer>
 </div>
 <script>
+  // 방문·검색·버튼 클릭 수 세기(2026-11-09): 가입 없는 Abacus 카운터. 쿠키·개인정보 없이 숫자만 올린다. 보기: python shop_stats.py
+  const COUNTER = "https://abacus.jasoncameron.dev/hit/onharu-shop/";
+  function count(key) {
+    try { fetch(COUNTER + key, { keepalive: true, mode: "cors", credentials: "omit" }).catch(() => {}); } catch (e) {}
+  }
+  count("visit");
+
   const list = document.getElementById("list");
   const status = document.getElementById("status");
   const q = document.getElementById("q");
@@ -192,6 +199,7 @@
     for (const l of item.links) {
       const a = el("a", "buy", item.links.length > 1 ? l.label + " 쿠팡에서 보기" : "쿠팡에서 보기");
       a.href = l.url; a.target = "_blank"; a.rel = "sponsored noopener";
+      a.addEventListener("click", () => count("click-" + norm(item.no)));
       links.append(a);
     }
     if (item.post) {
@@ -211,6 +219,7 @@
   function bigCard(item) {
     const a = el("a", "big");
     a.href = item.links[0].url; a.target = "_blank"; a.rel = "sponsored noopener";
+    a.addEventListener("click", () => count("click-" + norm(item.no)));
     const thumb = el("div", "thumb");
     if (item.image) {
       const img = el("img");
@@ -255,6 +264,7 @@
   document.getElementById("form").addEventListener("submit", (e) => {
     e.preventDefault();
     q.blur();
+    if (norm(q.value)) { count("search"); count("search-" + norm(q.value)); }   // 검색 전체 + 번호별
     syncUrl();
     render();
     window.scrollTo({ top: 0, behavior: "smooth" });
